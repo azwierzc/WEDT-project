@@ -33,14 +33,12 @@ class Analysis:
     #     plt.show()
 
 
-    def losses_plotting(self, train_losses_vector, val_losses_vector, title, xlabel):
-        val_losses_iter = np.arange(len(val_losses_vector))
-        train_losses_iter = np.arange(len(train_losses_vector))
+    def losses_plotting(self, train_losses_vector, val_losses_vector, steps_vector, title, xlabel):
         plt.figure()
-        plt.plot(train_losses_iter, train_losses_vector, 'r', label='Training loss', )
-        plt.plot(val_losses_iter, val_losses_vector, 'b', label='Validation loss')
+        plt.plot(steps_vector, train_losses_vector, 'r', label='Training loss', )
+        plt.plot(steps_vector, val_losses_vector, 'b', label='Validation loss')
         plt.legend()
-        plt.xlabel('Number of steps [N x{}]'.format(xlabel)), plt.ylabel('Losses')
+        plt.xlabel('Steps'.format(xlabel)), plt.ylabel('Loss')
         plt.title(title)
         plt.show()
 

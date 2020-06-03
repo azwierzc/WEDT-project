@@ -18,7 +18,7 @@ SEQUENCE_LENGTH = 100  # the length of all sequences (number of words per sample
 EMBEDDING_SIZE = 100  # Using 100-Dimensional GloVe embedding vectors
 TEST_SIZE = 0.20  # ratio of testing set
 OUTPUT_SIZE = 1
-EPOCHS = 3
+EPOCHS = 1
 HIDDEN_DIM = 100
 LEARNING_RATE = 0.005
 
@@ -38,7 +38,7 @@ def load_data():
 
 
 # load the data
-num = 500
+num = 50
 X, y = load_data()
 X = X[:num]
 y = y[:num]
@@ -227,6 +227,7 @@ for n in range(0, len(models)):
     for i in range(EPOCHS):
         val_losses_vector = []
         train_losses_vector = []
+        steps_losses_vector = []
         titleOfEpoch = " Epoch: {}/{}".format(i + 1, EPOCHS)
         plotTitle = title + titleOfEpoch
         counter = 0
@@ -267,6 +268,7 @@ for n in range(0, len(models)):
 
                 val_losses_vector.append(np.mean(val_losses))
                 train_losses_vector.append(loss.item())
+                steps_losses_vector.append(counter)
 
                 if np.mean(val_losses) <= valid_loss_min:
                     torch.save(model.state_dict(), './state/state_dict.pt')
@@ -275,7 +277,7 @@ for n in range(0, len(models)):
                                                                                                         val_losses)))
                     valid_loss_min = np.mean(val_losses)
 
-        analysis.losses_plotting(train_losses_vector, val_losses_vector, plotTitle, print_every)
+        analysis.losses_plotting(train_losses_vector, val_losses_vector, steps_losses_vector, plotTitle, print_every)
 
     # ===================== TESTING ==========================
     # Loading the best model
