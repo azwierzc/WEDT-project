@@ -17,10 +17,10 @@ from SpamClassifierLstmPosFull import SpamClassifierLstmPosFull
 from SpamClassifierLstmPosUniversal import SpamClassifierLstmPosUniversal
 from SpamClassifierSingleLstmCell import SpamClassifierSingleLstmCell
 from IndexMapper import IndexMapper
+from Analysis import Analysis
 from UniversalTagger import UniversalTagger
 from UniversalTagger import UniversalTagger
 import json
-from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
 from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import plot_precision_recall_curve
 from sklearn.metrics import confusion_matrix
@@ -36,7 +36,7 @@ TEST_SIZE = 0.20  # ratio of testing set
 OUTPUT_SIZE = 1
 # N_ITERS = 5
 # EPOCHS = int(N_ITERS / (len(X_train) / BATCH_SIZE))
-EPOCHS = 1
+EPOCHS = 2
 HIDDEN_DIM = 100
 N_LAYERS = 2
 LEARNING_RATE = 0.005
@@ -57,7 +57,7 @@ def load_data():
 
 
 # load the data
-num = 5574
+num = 50
 X, y = load_data()
 X = X[:num]
 y = y[:num]
@@ -81,39 +81,12 @@ y = np.asarray(y, dtype=np.float32)
 XSpamText = tokenizer.sequences_to_texts(X[y == 1])
 XHamText = tokenizer.sequences_to_texts(X[y == 0])
 
-indexes = ["Ham", "Spam"]
-values = [len(XHamText), len(XSpamText)]
-
-# Bar Chart
-plt.figure()
-barList = plt.bar(indexes, values, align="center", width=0.5)
-plt.title('Liczba wystąpień danej klasy', fontsize=20)
-plt.xlabel('Klasa', fontsize=14)
-plt.ylabel('Liczba wystąpień', fontsize=14)
-barList[0].set_color('darkorange')
-barList[1].set_color('darkblue')
-plt.show()
+analysis = Analysis(XHamText, XSpamText)
 
 # split and shuffle
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=TEST_SIZE, random_state=7)
 
 split_frac = 0.5  # 50% validation, 50% test
-
-
-def visualize(data):
-    words = ''
-    for msg in data:
-        msg = msg.lower()
-        words += msg + ''
-    wordsCloud = WordCloud(width=600, height=400).generate(words)
-    plt.imshow(wordsCloud)
-    plt.axis('off')
-    plt.show()
-
-visualize(XSpamText)
-visualize(XHamText)
-
-
 
 split_frac = 0.5  # 50% validation, 50% test
 split_id = int(split_frac * len(X_test))
@@ -238,7 +211,6 @@ print(model)
 criterion = nn.BCELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
-counter = 0
 print_every = len(X_val)
 clip = 5
 valid_loss_min = np.Inf
@@ -246,12 +218,16 @@ valid_loss_min = np.Inf
 ######################## TRAINING ###########################
 # Set model to train configuration
 model.train()
-val_losses_vector = []
-train_losses_vector = []
+
+title = "Values of losses of"
 
 for i in range(EPOCHS):
+    val_losses_vector = []
+    train_losses_vector = []
+    titleOfEpoch = " Epoch: {}/{}".format(i + 1, EPOCHS)
+    plotTitle = title + titleOfEpoch
+    counter = 0
     h = model.init_hidden(BATCH_SIZE)
-    start_time = time.time()
     avg_loss = 0
 
     for inputs, labels in train_loader:
@@ -295,6 +271,8 @@ for i in range(EPOCHS):
                                                                                                 np.mean(val_losses)))
                 valid_loss_min = np.mean(val_losses)
 
+    analysis.losses_plotting(train_losses_vector, val_losses_vector, plotTitle, print_every)
+
 ######################## TESTING ###########################
 # Loading the best model
 model.load_state_dict(torch.load('./state/state_dict.pt'))
@@ -325,7 +303,6 @@ print("Test accuracy: {:.3f}%".format(test_acc * 100))
 test_acc = num_correct / len(test_loader.dataset)
 print("Test accuracy: {:.3f}%".format(test_acc * 100))
 
-
 test_labels_vector = np.array(test_labels_vector)
 test_pred_vector = np.array(test_pred_vector)
 
@@ -341,7 +318,6 @@ print(confusionMatrix)
 print('Average recall score: {0:0.4f}'.format(recall))
 print('Average precision score: {0:0.4f}'.format(precision))
 print('Average f1-recall score: {0:0.4f}'.format(f1))
-
 
 
 def get_predictions(text):
@@ -363,16 +339,6 @@ def get_predictions(text):
         return "spam"
 
 
-# Plot training and validation loss
-val_losses_iter = np.arange(len(val_losses_vector))
-train_losses_iter = np.arange(len(train_losses_vector))
-
-plt.figure()
-plt.plot(train_losses_iter, train_losses_vector, 'r', label='Training loss', )
-plt.plot(val_losses_iter, val_losses_vector, 'b', label='Validation loss')
-plt.legend()
-plt.xlabel('Every 1000 samples'), plt.ylabel('Values')
-plt.show()
 
 text = "Congratulations! you have won 100,000$ this week, click here to claim fast"
 print(get_predictions(text))
@@ -382,5 +348,3 @@ print(get_predictions(text))
 
 text = "Thanks for your subscription to Ringtone UK your mobile will be charged £5/month Please confirm by replying YES or NO. If you reply NO you will not be charged"
 print(get_predictions(text))
-
-
