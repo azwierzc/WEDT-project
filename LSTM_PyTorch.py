@@ -57,7 +57,7 @@ def load_data():
 
 
 # load the data
-num = 2000
+num = 5574
 X, y = load_data()
 X = X[:num]
 y = y[:num]
@@ -86,10 +86,10 @@ values = [len(XHamText), len(XSpamText)]
 
 # Bar Chart
 plt.figure()
-barList = plt.bar(indexes, values, align="center", width=0.5, alpha=0.5)
+barList = plt.bar(indexes, values, align="center", width=0.5)
 plt.title('Liczba wystąpień danej klasy', fontsize=20)
-plt.xlabel('Liczba wystąpień', fontsize=14)
-plt.ylabel('Klasa', fontsize=14)
+plt.xlabel('Klasa', fontsize=14)
+plt.ylabel('Liczba wystąpień', fontsize=14)
 barList[0].set_color('darkorange')
 barList[1].set_color('darkblue')
 plt.show()
@@ -99,15 +99,21 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=TEST_SIZE, r
 
 split_frac = 0.5  # 50% validation, 50% test
 
-# wordcloud for insult comments
-#plt.subplot(325)
-#subset = XSpamText
-#text = ["1", "2"]
-#wc = WordCloud(background_color="black", max_words=2000)
-#wc.generate(" ".join("f"))
-#plt.axis("off")
-#plt.title("Częste słowa w obraźliwych komentarzach", fontsize=20)
-#plt.imshow(wc.recolor(colormap='Paired_r', random_state=244), alpha=0.98)
+
+def visualize(data):
+    words = ''
+    for msg in data:
+        msg = msg.lower()
+        words += msg + ''
+    wordsCloud = WordCloud(width=600, height=400).generate(words)
+    plt.imshow(wordsCloud)
+    plt.axis('off')
+    plt.show()
+
+visualize(XSpamText)
+visualize(XHamText)
+
+
 
 split_frac = 0.5  # 50% validation, 50% test
 split_id = int(split_frac * len(X_test))
@@ -336,8 +342,6 @@ print('Average recall score: {0:0.4f}'.format(recall))
 print('Average precision score: {0:0.4f}'.format(precision))
 print('Average f1-recall score: {0:0.4f}'.format(f1))
 
-cross_result = cross_validate(test_pred_vector, X_test, test_labels_vector, cv=10, return_estimator=True)
-print(classification_report(cross_result, X_test, y_test))
 
 
 def get_predictions(text):
@@ -378,3 +382,5 @@ print(get_predictions(text))
 
 text = "Thanks for your subscription to Ringtone UK your mobile will be charged £5/month Please confirm by replying YES or NO. If you reply NO you will not be charged"
 print(get_predictions(text))
+
+
